@@ -10,9 +10,9 @@ SOURCE = ("Data: Bureau of Meteorology, ACORN-SAT v2.6 and unadjusted observatio
           "from Alice Springs Airport (015590) and Post Office (015540)")
 
 
-def plot(acorn, station, post_office, title, subtitle):
+def plot(acorn, airport, post_office, title, subtitle):
     a = data.annual_means(acorn)
-    s = data.annual_means(station)
+    s = data.annual_means(airport)
     p = data.annual_means(post_office).loc[a.index.min():]
 
     fig = style.slide()
