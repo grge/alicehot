@@ -1,6 +1,6 @@
 import sys
 
-from alicehot import data, enso, hotdays, spiral, stripes, style
+from alicehot import compare, data, enso, hotdays, spiral, stripes, style
 
 style.apply()
 df = data.load_tmax(first_season=1910)
@@ -39,6 +39,12 @@ stripes.plot(
     df,
     title="Annual maximum temperature anomaly, Alice Springs",
     subtitle="Annual mean daily maximum relative to 1961–1990",
+)
+
+compare.plot(
+    data.load_acorn(), data.load_station(),
+    title="Annual mean maximum temperature, Alice Springs",
+    subtitle="ACORN-SAT and unadjusted station observations, by calendar year",
 )
 
 if "--animate" in sys.argv:
