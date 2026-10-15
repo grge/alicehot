@@ -42,7 +42,7 @@ stripes.plot(
 )
 
 compare.plot(
-    data.load_acorn(), data.load_station(),
+    data.load_acorn(), data.load_station(), data.load_post_office(),
     title="Annual mean maximum temperature, Alice Springs",
     subtitle="ACORN-SAT and unadjusted station observations, by calendar year",
 )

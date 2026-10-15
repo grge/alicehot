@@ -12,6 +12,10 @@ ACORN_URL = ("ftp://ftp.bom.gov.au/anon/home/ncc/www/change/ACORN_SAT_daily/"
              "acorn_sat_v2.6.0_daily_tmax.tar.gz")
 ACORN_FILE = DATA / "acorn_sat_v2.6.0_daily_tmax.tar.gz"
 ACORN_STATION = "tmax.015590.daily.csv"
+ACORN_RAW_URL = ("ftp://ftp.bom.gov.au/anon/home/ncc/www/change/ACORN_SAT_daily/"
+                 "v2.5-raw-data-and-supporting-information.zip")
+ACORN_RAW_FILE = DATA / "v2.5-raw-data-and-supporting-information.zip"
+POST_OFFICE = "raw-data/hqnew015540"
 RONI_URL = "https://www.cpc.ncep.noaa.gov/data/indices/RONI.ascii.txt"
 RONI_FILE = DATA / "RONI.ascii.txt"
 
@@ -40,6 +44,18 @@ def load_acorn():
         with t.extractfile(ACORN_STATION) as f:
             df = pd.read_csv(f, skiprows=[1], index_col=0, parse_dates=True)
     return df.iloc[:, 0].rename("tmax")
+
+
+def load_post_office():
+    with zipfile.ZipFile(_download(ACORN_RAW_URL, ACORN_RAW_FILE)) as z:
+        name = next(n for n in z.namelist() if n.endswith(POST_OFFICE))
+        with z.open(name) as f:
+            df = pd.read_fwf(f, widths=[6, 8, 6, 5], header=None,
+                             names=["station", "date", "tmax", "tmin"],
+                             dtype={"date": str})
+    tmax = pd.Series(df.tmax.values / 10,
+                     index=pd.to_datetime(df.date, format="%Y%m%d"), name="tmax")
+    return tmax.where(tmax > -99)
 
 
 def load_tmax(first_season):
