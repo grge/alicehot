@@ -11,10 +11,7 @@ CMAP = LinearSegmentedColormap.from_list(
 
 
 def annual_anomaly(df):
-    tmax = df.tmax[df.tmax.first_valid_index():]
-    counts = tmax.groupby(tmax.index.year).count()
-    annual = tmax.groupby(tmax.index.year).mean()[counts >= 330]
-    annual = annual[annual.index >= data.FIRST_SEASON]
+    annual = data.annual_means(df.tmax)
     return annual - annual.loc[1961:1990].mean()
 
 

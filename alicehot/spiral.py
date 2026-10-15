@@ -5,7 +5,7 @@ from matplotlib.collections import LineCollection
 from matplotlib.colors import LinearSegmentedColormap, Normalize
 from matplotlib.patheffects import withStroke
 
-from . import data, style
+from . import style
 
 CMAP = LinearSegmentedColormap.from_list(
     "heat", ["#f3e3c3", "#f0a050", "#d9482b", "#7f1414"])
@@ -19,7 +19,6 @@ def rolling_anomaly(df):
     counts = tmax.resample("MS").count()
     monthly = tmax.resample("MS").mean()
     monthly = monthly.where(counts >= counts.index.days_in_month * 0.8)
-    monthly = monthly[monthly.index.year >= data.FIRST_SEASON]
     base = monthly[slice(*BASELINE_YEARS)]
     clim = base.groupby(base.index.month).mean()
     anomaly = monthly - clim.reindex(monthly.index.month).values
@@ -75,7 +74,9 @@ class Spiral:
         cb = fig.colorbar(ScalarMappable(norm, CMAP), cax=cax,
                           orientation="horizontal")
         cb.outline.set_visible(False)
-        cb.set_ticks([int(years.min()), 1960, 1980, 2000, int(years.max())])
+        first, last = int(years.min()), int(years.max())
+        inner = [y for y in range(1900, last, 20) if first + 10 <= y <= last - 10]
+        cb.set_ticks([first, *inner, last])
         cax.tick_params(length=0, labelsize=14, pad=6)
 
         fig.text(0.05, 0.66, note, fontsize=15, color=style.INK_2, va="top",

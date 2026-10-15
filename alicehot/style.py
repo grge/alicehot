@@ -18,7 +18,8 @@ COOL = "#2a78d6"
 NEUTRAL = "#a8a69e"
 
 SLIDE = (40 / 3, 7.5)
-SOURCE = "Data: Bureau of Meteorology, Alice Springs Airport (015590)"
+SOURCE = ("Data: Bureau of Meteorology, ACORN-SAT v2.6 to 2024 and Alice Springs "
+          "Airport (015590) observations from 2025")
 
 
 def apply():
