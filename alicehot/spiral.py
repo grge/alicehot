@@ -27,7 +27,7 @@ def rolling_anomaly(df):
 
 
 class Spiral:
-    def __init__(self, df, **fig_kwargs):
+    def __init__(self, df, title, subtitle, note):
         self.roll = rolling_anomaly(df)
         self.theta = np.unwrap(2 * np.pi * (self.roll.index.month - 1) / 12)
         self.r = self.roll.values + OFFSET
@@ -37,7 +37,7 @@ class Spiral:
         self.segments = np.concatenate([points[:-1], points[1:]], axis=1)
         self.colours = CMAP(norm(years[:-1]))
 
-        self.fig = fig = style.slide(**fig_kwargs)
+        self.fig = fig = style.slide()
         self.ax = ax = fig.add_axes([0.5, 0.09, 0.46, 0.7], projection="polar")
         ax.set_theta_zero_location("N")
         ax.set_theta_direction(-1)
@@ -78,15 +78,10 @@ class Spiral:
         cb.set_ticks([int(years.min()), 1960, 1980, 2000, int(years.max())])
         cax.tick_params(length=0, labelsize=14, pad=6)
 
-        fig.text(0.05, 0.66,
-                 "Each point is the average maximum temperature\n"
-                 "over the previous 12 months, compared with the\n"
-                 f"{BASELINE_YEARS[0]}–{BASELINE_YEARS[1]} average. "
-                 "One loop is one year.",
-                 fontsize=15, color=style.INK_2, va="top", linespacing=1.4)
+        fig.text(0.05, 0.66, note, fontsize=15, color=style.INK_2, va="top",
+                 linespacing=1.4)
 
-        style.headline(fig, "Alice Springs is spiralling hotter",
-                       "Average daily maximum temperature, 1942 to today")
+        style.headline(fig, title, subtitle)
 
     def draw(self, n):
         self.lines.set_segments(self.segments[:n - 1])
@@ -99,14 +94,15 @@ class Spiral:
         return self.lines, self.head, self.label
 
 
-def plot(df):
-    s = Spiral(df)
+def plot(df, title, subtitle, note):
+    s = Spiral(df, title, subtitle, note)
     s.draw(len(s.roll))
     style.save(s.fig, "spiral")
 
 
-def animate(df, fps=30, months_per_frame=2, hold_seconds=4):
-    s = Spiral(df)
+def animate(df, title, subtitle, note, fps=30, months_per_frame=2,
+            hold_seconds=4):
+    s = Spiral(df, title, subtitle, note)
     n = len(s.roll)
     frames = list(range(2, n, months_per_frame)) + [n] * (fps * hold_seconds)
     anim = FuncAnimation(s.fig, s.draw, frames=frames, blit=False)

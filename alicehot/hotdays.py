@@ -7,7 +7,7 @@ from . import data, style
 DECADE_INK = "#a3271b"
 
 
-def plot(df, threshold, title, name):
+def plot(df, threshold, name, title, subtitle):
     counts = data.days_at_or_above(df, threshold)
     seasons = counts.index.values
 
@@ -45,9 +45,5 @@ def plot(df, threshold, title, name):
     ax.set_ylim(0, counts.max() * 1.12)
     ax.yaxis.set_major_locator(MaxNLocator(6, steps=[1, 2, 5, 10], integer=True))
 
-    style.headline(
-        fig, title,
-        f"Days each year (July–June) reaching {threshold} °C or more. "
-        "Lines show the average for each decade.",
-    )
+    style.headline(fig, title, subtitle)
     style.save(fig, name)

@@ -18,7 +18,7 @@ def annual_anomaly(df):
     return annual - annual.loc[1961:1990].mean()
 
 
-def plot(df):
+def plot(df, title, subtitle):
     anom = annual_anomaly(df)
     years = anom.index.values
     limit = np.abs(anom).max()
@@ -36,9 +36,5 @@ def plot(df):
         fig.text(x, 0.12, str(year), ha=ha, va="top", fontsize=17,
                  color=style.INK_2)
 
-    style.headline(
-        fig, "Alice Springs' warming stripes",
-        f"Average maximum temperature each year, {years.min()}–{years.max()}, "
-        "compared with the 1961–1990 average",
-    )
+    style.headline(fig, title, subtitle)
     style.save(fig, "stripes")

@@ -8,18 +8,16 @@ from . import data, style
 
 PHASES = ["El Niño", "Neutral", "La Niña"]
 COLOURS = {"El Niño": style.HEAT, "Neutral": style.NEUTRAL, "La Niña": style.COOL}
-THRESHOLD = 40
-SPLIT = 1988
 SOURCE = style.SOURCE + "; ENSO: NOAA Relative Oceanic Niño Index (Dec–Feb)"
 
 
-def summers(df):
-    counts = data.days_at_or_above(df, THRESHOLD).rename("days")
+def summers(df, threshold):
+    counts = data.days_at_or_above(df, threshold).rename("days")
     return pd.concat([counts, data.summer_enso()], axis=1, join="inner")
 
 
-def plot_bars(df):
-    s = summers(df)
+def plot_bars(df, threshold, title, subtitle):
+    s = summers(df, threshold)
     fig = style.slide()
     ax = fig.add_axes([0.05, 0.13, 0.9, 0.6])
     ax.bar(s.index, s.days, width=0.72, color=s.phase.map(COLOURS), zorder=2)
@@ -45,12 +43,7 @@ def plot_bars(df):
               ncols=3, handlelength=1, handleheight=1, columnspacing=1.5,
               fontsize=16, borderaxespad=0.4)
 
-    style.headline(
-        fig, "Scorching summers happen with or without El Niño",
-        f"Days each year (July–June) reaching {THRESHOLD} °C or more, "
-        "coloured by the ENSO state that summer",
-        source=SOURCE,
-    )
+    style.headline(fig, title, subtitle, source=SOURCE)
     style.save(fig, "enso-bars")
 
 
@@ -66,10 +59,10 @@ def _swarm(values, width):
     return offsets
 
 
-def plot_eras(df):
-    s = summers(df)
-    s["recent"] = s.index >= SPLIT
-    eras = [(False, f"{s.index.min()} to {SPLIT - 1}"), (True, f"{SPLIT} to now")]
+def plot_eras(df, threshold, split, title, subtitle):
+    s = summers(df, threshold)
+    s["recent"] = s.index >= split
+    eras = [(False, f"{s.index.min()} to {split - 1}"), (True, f"{split} to now")]
 
     fig = style.slide()
     ax = fig.add_axes([0.05, 0.2, 0.9, 0.53])
@@ -110,10 +103,5 @@ def plot_eras(df):
     ax.legend(handles=handles, loc="lower left", bbox_to_anchor=(0, 1.0),
               ncols=2, fontsize=15, columnspacing=2, borderaxespad=0.4)
 
-    style.headline(
-        fig, "La Niña summers today are hotter than El Niño summers were",
-        f"Days each year (July–June) reaching {THRESHOLD} °C or more, "
-        "by ENSO state that summer",
-        source=SOURCE,
-    )
+    style.headline(fig, title, subtitle, source=SOURCE)
     style.save(fig, "enso-eras")
