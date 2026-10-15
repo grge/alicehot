@@ -30,8 +30,8 @@ enso.plot_bars(
     subtitle="Days per year (July–June), coloured by ENSO phase in December–February",
 )
 enso.plot_eras(
-    df, 40, 1988,
-    title="Days at or above 40 °C by ENSO phase, before and since 1988",
+    df, 40, [1975, 2001],
+    title="Days at or above 40 °C by ENSO phase and period, Alice Springs",
     subtitle="Days per year (July–June), by ENSO phase in December–February",
 )
 

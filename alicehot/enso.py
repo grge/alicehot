@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from matplotlib.colors import to_rgb
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from matplotlib.ticker import MaxNLocator
@@ -59,39 +60,48 @@ def _swarm(values, width):
     return offsets
 
 
-def plot_eras(df, threshold, split, title, subtitle):
+def _tint(colour, amount):
+    return tuple(np.array(to_rgb(style.SURFACE)) * (1 - amount)
+                 + np.array(to_rgb(colour)) * amount)
+
+
+def plot_eras(df, threshold, splits, title, subtitle):
     s = summers(df, threshold)
-    s["recent"] = s.index >= split
-    eras = [(False, f"{s.index.min()} to {split - 1}"), (True, f"{split} to now")]
+    s["era"] = np.searchsorted(splits, s.index, side="right")
+    starts = [s.index.min(), *splits]
+    labels = [f"{a}–{b - 1}" for a, b in zip(starts, splits)] + [f"{splits[-1]}–now"]
+    n = len(labels)
+    step, group = 1.2, len(labels) * 1.2 + 0.9
 
     fig = style.slide()
-    ax = fig.add_axes([0.05, 0.2, 0.9, 0.53])
+    ax = fig.add_axes([0.05, 0.2, 0.92, 0.53])
     ax.grid(False)
     ax.spines["bottom"].set_visible(False)
     ax.tick_params(axis="x", length=0)
 
     xticks, xlabels = [], []
     for g, phase in enumerate(PHASES):
-        for j, (recent, label) in enumerate(eras):
-            x = g * 3 + j * 1.15
-            sub = s[(s.phase == phase) & (s.recent == recent)].days
+        for era, label in enumerate(labels):
+            x = g * group + era * step
+            sub = s[(s.phase == phase) & (s.era == era)].days
             colour = COLOURS[phase]
             ax.scatter(x + _swarm(sub, 0.1), sub, s=70, zorder=3,
-                       color=colour if recent else style.SURFACE,
-                       edgecolor=colour, linewidth=2)
+                       color=_tint(colour, era / (n - 1)), edgecolor=colour,
+                       linewidth=2)
             mean = sub.mean()
-            ax.plot([x - 0.38, x + 0.38], [mean, mean], color=style.INK, lw=3,
+            ax.plot([x - 0.35, x + 0.35], [mean, mean], color=style.INK, lw=3,
                     solid_capstyle="butt", zorder=4)
-            ax.text(x + 0.42, mean, f"{mean:.0f}", va="center", ha="left",
+            ax.text(x + 0.4, mean, f"{mean:.0f}", va="center", ha="left",
                     fontsize=17, fontweight="semibold", zorder=4)
             xticks.append(x)
             xlabels.append(label)
-        ax.text(g * 3 + 0.575, -0.12, phase, transform=ax.get_xaxis_transform(),
-                ha="center", va="top", fontsize=19, fontweight="semibold")
+        ax.text(g * group + (n - 1) * step / 2, -0.12, phase,
+                transform=ax.get_xaxis_transform(), ha="center", va="top",
+                fontsize=19, fontweight="semibold")
 
-    ax.set_xticks(xticks, xlabels, fontsize=14)
-    ax.set_xlim(-0.8, 2 * 3 + 1.15 + 0.9)
-    ax.set_ylim(0, s.days.max() * 1.05)
+    ax.set_xticks(xticks, xlabels, fontsize=13)
+    ax.set_xlim(-0.7, 2 * group + (n - 1) * step + 0.9)
+    ax.set_ylim(-1.5, s.days.max() * 1.05)
     ax.yaxis.set_major_locator(MaxNLocator(6, steps=[1, 2, 5, 10], integer=True))
     ax.yaxis.grid(True)
 
