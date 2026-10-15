@@ -3,7 +3,7 @@ import sys
 from alicehot import compare, data, enso, hotdays, spiral, stripes, style
 
 style.apply()
-df = data.load_tmax(first_season=1910)
+df = data.load_tmax(first_season=1942)
 
 hotdays.plot(
     df, 35, "days-35",
