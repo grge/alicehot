@@ -5,11 +5,10 @@ Run with: uv run python -m alicehot.ensostats
 import numpy as np
 import pandas as pd
 
-from . import data
+from . import data, enso
 from .enso import PHASES
 
 SPLITS = [1975, 2001]
-SUMMER = [11, 12, 1, 2, 3]
 MONTHS = {9: "Sep", 10: "Oct", 11: "Nov", 12: "Dec", 1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr"}
 METRICS = {
     "days40": ("Days ≥ 40 °C", "days", 1),
@@ -22,13 +21,12 @@ RNG = np.random.default_rng(0)
 
 def seasons(df, splits):
     df = data.complete_seasons(df)
-    summer = df[df.index.month.isin(SUMMER)].groupby("season").tmax
     roni = data.load_roni()
     son = roni[roni.season == "SON"].set_index("year").anom
     s = pd.DataFrame({
         "days40": data.days_at_or_above(df, 40),
         "days35": data.days_at_or_above(df, 35),
-        "tmax": summer.mean().where(summer.count() >= 140),
+        "tmax": enso.summer_tmax(df),
     }).join(data.summer_enso(), how="inner").astype({"days40": float, "days35": float})
     s["roni_son"] = son.reindex(s.index).values
     s["era"] = np.searchsorted(splits, s.index, side="right")

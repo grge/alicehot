@@ -10,11 +10,18 @@ from . import data, style
 PHASES = ["El Niño", "Neutral", "La Niña"]
 COLOURS = {"El Niño": style.HEAT, "Neutral": style.NEUTRAL, "La Niña": style.COOL}
 SOURCE = style.SOURCE + "; ENSO: NOAA Relative Oceanic Niño Index (Dec–Feb)"
+SUMMER = [11, 12, 1, 2, 3]
 
 
 def summers(df, threshold):
     counts = data.days_at_or_above(df, threshold).rename("days")
     return pd.concat([counts, data.summer_enso()], axis=1, join="inner")
+
+
+def summer_tmax(df):
+    df = data.complete_seasons(df)
+    summer = df[df.index.month.isin(SUMMER)].groupby("season").tmax
+    return summer.mean().where(summer.count() >= 140)
 
 
 def plot_bars(df, threshold, title, subtitle):
@@ -115,3 +122,49 @@ def plot_eras(df, threshold, splits, title, subtitle):
 
     style.headline(fig, title, subtitle, source=SOURCE)
     style.save(fig, "enso-eras")
+
+
+def plot_scatter(df, title, subtitle):
+    s = pd.concat([summer_tmax(df).rename("tmax"), data.summer_enso()],
+                  axis=1, join="inner").dropna()
+    t = s.index.values
+    s["anom"] = s.tmax - np.polyval(np.polyfit(t, s.tmax, 2), t)
+    slope, intercept = np.polyfit(s.roni, s.anom, 1)
+
+    fig = style.slide()
+    ax = fig.add_axes([0.07, 0.19, 0.86, 0.54])
+    ax.grid(True, axis="both")
+    ax.axhline(0, color=style.BASELINE, lw=1.5, zorder=1)
+    ax.scatter(s.roni, s.anom, s=80, zorder=3, color=s.phase.map(COLOURS),
+               edgecolor=style.SURFACE, linewidth=1.5)
+
+    xs = np.array([s.roni.min() - 0.1, s.roni.max() + 0.1])
+    ax.plot(xs, intercept + slope * xs, color=style.INK, lw=2.5, zorder=4)
+    ax.text(xs[1] + 0.1, intercept + slope * xs[1],
+            f"+{slope:.1f} °C per\nunit of index", ha="left", va="center",
+            fontsize=15, fontweight="semibold", zorder=4)
+
+    labelled = pd.concat([s.nsmallest(2, "anom"), s.nlargest(2, "anom")])
+    for season, row in labelled.iterrows():
+        right = row.roni < 1.5
+        ax.annotate(data.season_label(season), xy=(row.roni, row.anom),
+                    xytext=(12 if right else -12, 0), textcoords="offset points",
+                    ha="left" if right else "right", va="center",
+                    fontsize=14, color=style.INK_2)
+
+    ax.set_xlim(xs[0] - 0.15, xs[1] + 0.95)
+    ax.xaxis.set_major_locator(MaxNLocator(8, steps=[1, 2, 5, 10]))
+    ax.yaxis.set_major_locator(MaxNLocator(6, steps=[1, 2, 5, 10]))
+    ax.yaxis.set_major_formatter(lambda v, _: f"{v:+.0f} °C".replace("-", "−") if v else "0")
+    ax.set_xlabel("← La Niña      Relative Oceanic Niño Index, Dec–Feb      El Niño →",
+                  fontsize=15, labelpad=8)
+    ax.tick_params(axis="x", length=0)
+
+    handles = [Line2D([], [], ls="", marker="o", ms=10, mfc=COLOURS[p], mec=COLOURS[p],
+                      label=p) for p in PHASES]
+    ax.legend(handles=handles, loc="lower left", bbox_to_anchor=(0, 1.0),
+              ncols=3, fontsize=16, columnspacing=1.5, handletextpad=0.3,
+              borderaxespad=0.4)
+
+    style.headline(fig, title, subtitle, source=SOURCE)
+    style.save(fig, "enso-scatter")

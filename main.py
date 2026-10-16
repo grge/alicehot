@@ -34,6 +34,11 @@ enso.plot_eras(
     title="Days at or above 40 °C by ENSO phase and period, Alice Springs",
     subtitle="Days per year (July–June), by ENSO phase in December–February",
 )
+enso.plot_scatter(
+    df,
+    title="Summer heat against ENSO, Alice Springs",
+    subtitle="Nov–Mar mean daily maximum, departure from the long-term warming trend",
+)
 
 stripes.plot(
     df,
